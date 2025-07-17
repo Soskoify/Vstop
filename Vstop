@@ -1,0 +1,73 @@
+local Player = game:GetService("Players").LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "VstopGUI"
+ScreenGui.Parent = PlayerGui
+
+local VstopButton = Instance.new("TextButton")
+VstopButton.Name = "Vstop"
+VstopButton.Size = UDim2.new(0, 80, 0, 80)
+VstopButton.Position = UDim2.new(0.8, 0, 0.7, 0)
+VstopButton.Text = "Vstop"
+VstopButton.TextScaled = true
+VstopButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+VstopButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+VstopButton.BorderSizePixel = 0
+VstopButton.ZIndex = 999
+VstopButton.Parent = ScreenGui
+
+VstopButton.Active = true
+VstopButton.Draggable = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.25, 0)
+UICorner.Parent = VstopButton
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(80, 80, 80)
+UIStroke.Parent = VstopButton
+
+local function smartStop()
+    local character = Player.Character or Player.CharacterAdded:Wait()
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    
+    if humanoid and humanoid.SeatPart then
+        local seat = humanoid.SeatPart
+        local vehicle = seat:FindFirstAncestorOfClass("VehicleSeat") or seat:FindFirstAncestorOfClass("Model")
+        
+        if vehicle then
+            if vehicle:IsA("VehicleSeat") then
+                local originalMaxSpeed = vehicle.MaxSpeed
+                vehicle.Throttle = 0
+                vehicle.Steer = 0
+                vehicle.MaxSpeed = 0
+                task.delay(0.3, function()
+                    if vehicle then
+                        vehicle.MaxSpeed = originalMaxSpeed
+                    end
+                end)
+            end
+            
+            for _, part in pairs(vehicle:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                    part.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                end
+                
+                if part:IsA("BodyVelocity") then
+                    part.MaxForce = Vector3.new(0, 0, 0)
+                    task.delay(0.3, function()
+                        if part then
+                            part.MaxForce = Vector3.new(4000, 4000, 4000)
+                        end
+                    end)
+                end
+            end
+        end
+    end
+end
+
+VstopButton.MouseButton1Click:Connect(smartStop)
+VstopButton.Activated:Connect(smartStop)
